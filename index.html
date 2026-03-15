@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlackJack</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.23.0/sweetalert2.min.css">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            font-family: "Poppins";
+            font-weight: bold;
+            font-style: italic;
+        }
+        .Bigcontainer{
+            max-width: 420px;
+            
+        }
+        body{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: bisque;
+            height: auto;
+            margin: auto;
+            text-align: center;
+        }
+        h1{
+            color: rgb(138, 114, 10);
+            font-style: normal;
+            margin-top: 10px;
+            font-size: 50px;
+        }
+        p{
+            color: rgb(62, 62, 62);
+            font-size: 35px;
+            margin-top: 20px;
+        }
+        button{
+            width: 300px;
+            height: 50px;
+            margin-bottom: 10px;
+            font-style: normal;
+            font-size: 30px;
+            color: bisque;
+            background: rgb(138, 114, 10);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: opacity 0.1s;
+        }
+        button:hover{
+            opacity: 0.7;
+        }
+        button:active{
+            opacity: 0.5;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="Bigcontainer">
+        <div class="container">
+            <h1>BlackJack</h1>
+            <p id="message-el">Want to play a round?</p>
+            <p id="card-el">Cards:</p>
+            <p id="sum-el">Sum:</p>
+            <button id="start-btn" onclick="StartGame()">START GAME</button>
+            <button id="newcCard-btn" onclick="newCard()">NEW CARD</button>
+            <p id="player-balance"></p>
+            <p id="Bonus"></p>
+            <p id="Start-attembs"></p>
+            <button id="add-money" onclick="AddMoney()">Add Money</button>
+        </div>
+    </div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.23.0/sweetalert2.min.js" integrity="sha512-pnPZhx5S+z5FSVwy62gcyG2Mun8h6R+PG01MidzU+NGF06/ytcm2r6+AaWMBXAnDHsdHWtsxS0dH8FBKA84FlQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    let player = {
+        name: "",
+        balance: 100
+    }
+    let cards = [];
+    let sum = 0;
+    let specialChance = 0;
+    let HasBlackJack = false;
+    let isAlive = false;
+    let message = "";
+    let start_btn = document.getElementById('start-btn');
+    let message_el = document.getElementById('message-el');
+    let card_el = document.getElementById('card-el');
+    let sum_el = document.getElementById('sum-el');
+    player.name = prompt("Enter your name");
+    while(player.name == null || player.name.trim() === "" || !isNaN(player.name)){
+         player.name = prompt("Enter your name!");
+    }
+    let player_balance = document.getElementById('player-balance')
+    
+    let startcount = document.getElementById('Start-attembs');
+    let count = 0;
+    let bonusCount = 0;
+    let bonus = document.getElementById('Bonus');
+    ShowPlayerInfo();
+    let afterBonus = 0;
+    let addMoreMoney = 0;
+    function StartGame(){
+        StartCount();
+        console.log("SpecialChance: "+specialChance);
+        console.log("Balance: "+player.balance);
+        if(player.balance < 10){
+        }else{
+            bonusCount++;
+            console.log(bonusCount)
+        }
+        addMoreMoney = bonusCount * 0.5;
+        // afterbonus is use to paste the Bonus to addMoreMoney after addmoney in AddMoney Function to remember the BonusMoney
+        addMoreMoney += afterBonus;
+        console.log(addMoreMoney)
+        BonusCal();
+        if(player.balance > 9){
+            isAlive = true;
+            let firstCard = RandomCardAndFindCard();
+            let secondCard = RandomCardAndFindCard();
+            sum = firstCard + secondCard;
+            cards = [firstCard, secondCard];
+            RenderGame();
+        }else{
+            Swal.fire({
+                icon: "error",
+                title: "You don't have enought money!",
+            });
+        }
+    }
+    function RenderGame(){
+        card_el.textContent = "Card: "
+        for(let i=0; i<cards.length; i++){
+        card_el.textContent += cards[i] + " ";
+        }
+        sum_el.textContent = "Sum: " + sum;
+        if(sum <= 20){
+            message = "Do you want to draw a new card?";
+        }
+        else if(sum === 21){
+            message = "Wohoo! You've got blackjack!";
+            WinBlackJack();
+            HasBlackJack = true;
+            isAlive = false;
+        }
+        else{
+            message = "You lose!!"; 
+            LoseGame();
+            isAlive = false;
+        }
+        message_el.textContent = message;
+        ShowPlayerInfo();
+    }
+    function newCard(){
+        if(isAlive === true &&  HasBlackJack === false ){
+            if(sum === 20){
+                specialChance = 10;
+            }else{
+                specialChance = 0;
+                specialChance = 0;
+            }
+            console.log("SpecialChance: "+specialChance);
+            let thirdCard = RandomCardAndFindCard();
+            cards.push(thirdCard);
+            sum += thirdCard;
+            message = "Draw a new card from the deck!";
+            RenderGame();
+            specialChance = 0;
+            console.log("SpecialChance: "+specialChance);
+            console.log("Balance: "+player.balance);
+        }
+        HasBlackJack = false
+    }
+    function getRandomNumber(){   
+        return Math.floor(Math.random() * 13) + 1;
+    }
+    function RandomCardAndFindCard(){
+        if(getRandomNumber() === 1){
+            return 11  
+        }
+        else if(getRandomNumber() > 10){
+            return 10
+        }else{
+            return getRandomNumber();
+        }
+    }
+    function WinBlackJack(){
+        player.balance += 10;
+        console.log(specialChance);
+        player.balance += specialChance;
+    }
+    function LoseGame(){
+        player.balance -= 10;
+    }
+    function ShowPlayerInfo(){
+        player_balance.textContent = player.name+ ": $" + player.balance.toFixed(2);
+    }
+    function AddMoney(){
+        let money_added = prompt("Enter your Bonus money to add to your balance");
+        while(money_added.trim() === "" || isNaN(money_added) ){
+            money_added = prompt("Enter your Bonus to add!");
+        }
+        if(money_added <= addMoreMoney && money_added != 0){  
+            player.balance += Number(money_added);
+            addMoreMoney -= money_added;
+            afterBonus = addMoreMoney
+            bonusCount = 0;
+            Swal.fire({
+                title: "Done!",
+                icon: "success",
+                draggable: true
+            });
+            BonusCal();
+            ShowPlayerInfo();
+        }else{
+            Swal.fire({
+                icon: "error",
+                title: "You can't add money higher then your bonus!",
+            });
+        } 
+    }
+    function StartCount(){
+        if(!(player.balance < 10)){
+            count++;
+            startcount.textContent = "Attempts: ";
+            startcount.textContent += count;
+        }
+    }
+    function BonusCal(){
+        bonus.textContent = "Bonus: $";
+        bonus.textContent += addMoreMoney;
+    }
+        
+</script>
+</html>
